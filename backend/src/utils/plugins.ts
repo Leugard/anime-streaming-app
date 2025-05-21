@@ -1,3 +1,6 @@
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+
 export async function extractKrakenFilesId(url: string) {
   const regex = /(?:view|embed-video)\/([\da-zA-Z]+)/i;
   const match = url.match(regex);
@@ -22,4 +25,14 @@ export async function CryptoJSAesJsonFormatter() {
       ciphertext: CryptoJS.enc.Base64.parse(parsed.ct),
     });
   };
+}
+
+export async function fetchHTML(url: any) {
+  const { data } = await axios.get(url, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+    },
+  });
+  return cheerio.load(data);
 }

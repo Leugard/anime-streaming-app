@@ -2,6 +2,11 @@ import axios from 'axios';
 import { Request, Response, NextFunction } from 'express';
 import * as cheerio from 'cheerio';
 import CryptoJS from 'crypto-js';
+import {
+  extractDoodStream,
+  extractKrakenFiles,
+  extractMp4Upload,
+} from '../utils/extractor';
 
 export const getAnimes = async (
   req: Request,
@@ -13,12 +18,12 @@ export const getAnimes = async (
     let hasNextPage = true;
     let allAnime: any[] = [];
 
-    const limit = 600;
+    const limit = 50;
 
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://samehadaku.now/daftar-anime-2/page/${currentPage}`;
+      const url = `https://kuronime.vip/anime/page/${currentPage}`;
       try {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
@@ -30,11 +35,15 @@ export const getAnimes = async (
           url: string | undefined;
         }[] = [];
 
-        $('.animposx').each((i, el) => {
-          const title = $(el).find('.title h2').text().trim();
-          const thumbnail = $(el).find('img').attr('src');
+        $('.bsx').each((i, el) => {
+          const title = $(el).find('.tt h4').text().trim();
+          const thumbnail = $(el)
+            .find('.limit > img')
+            .not('div.play img')
+            .attr('data-src');
           const url = $(el).find('a').attr('href');
           const id = url ? url.split('/').filter(Boolean).pop() : '';
+          console.log(thumbnail);
           anime.push({ id, title, thumbnail, url });
         });
 
@@ -60,8 +69,6 @@ export const getAnimes = async (
     }
     res.status(201).json({
       success: true,
-      totalPages: currentPage,
-      totalItems: allAnime.length,
       data: allAnime,
     });
   } catch (error) {
@@ -75,12 +82,12 @@ export const getAnimeByStatus = async (id: String) => {
     let hasNextPage = true;
     let allAnime: any[] = [];
 
-    const limit = 600;
+    const limit = 50;
 
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://samehadaku.now/daftar-anime-2/page/${currentPage}/?title&status=${id}&type&order=title`;
+      const url = `https://kuronime.vip/anime/page/${currentPage}/?title&status=${id}&type&order=title`;
       try {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
@@ -92,9 +99,12 @@ export const getAnimeByStatus = async (id: String) => {
           url: string | undefined;
         }[] = [];
 
-        $('.animposx').each((i, el) => {
-          const title = $(el).find('.title h2').text().trim();
-          const thumbnail = $(el).find('img').attr('src');
+        $('.bsx').each((i, el) => {
+          const title = $(el).find('.tt h4').text().trim();
+          const thumbnail = $(el)
+            .find('.limit > img')
+            .not('div.play img')
+            .attr('data-src');
           const url = $(el).find('a').attr('href');
           const id = url ? url.split('/').filter(Boolean).pop() : '';
           anime.push({ id, title, thumbnail, url });
@@ -134,12 +144,12 @@ export const getAnimeByType = async (id: String) => {
     let hasNextPage = true;
     let allAnime: any[] = [];
 
-    const limit = 600;
+    const limit = 50;
 
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://samehadaku.now/daftar-anime-2/page/${currentPage}/?title=&status=&type=${id}&order=title`;
+      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=&type=${id}&order=title`;
       try {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
@@ -151,9 +161,12 @@ export const getAnimeByType = async (id: String) => {
           url: string | undefined;
         }[] = [];
 
-        $('.animposx').each((i, el) => {
-          const title = $(el).find('.title h2').text().trim();
-          const thumbnail = $(el).find('img').attr('src');
+        $('.bsx').each((i, el) => {
+          const title = $(el).find('.tt h4').text().trim();
+          const thumbnail = $(el)
+            .find('.limit > img')
+            .not('div.play img')
+            .attr('data-src');
           const url = $(el).find('a').attr('href');
           const id = url ? url.split('/').filter(Boolean).pop() : '';
           anime.push({ id, title, thumbnail, url });
@@ -203,7 +216,7 @@ export const getAnimeByGenre = async (id: string[]) => {
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://samehadaku.now/daftar-anime-2/page/${currentPage}/?title=&status=&type=&order=title&${genreParams}`;
+      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=&type=&order=title&${genreParams}`;
 
       console.log('url: ', url);
       try {
@@ -217,9 +230,12 @@ export const getAnimeByGenre = async (id: string[]) => {
           url: string | undefined;
         }[] = [];
 
-        $('.animposx').each((i, el) => {
-          const title = $(el).find('.title h2').text().trim();
-          const thumbnail = $(el).find('img').attr('src');
+        $('.bsx').each((i, el) => {
+          const title = $(el).find('.tt h4').text().trim();
+          const thumbnail = $(el)
+            .find('.limit > img')
+            .not('div.play img')
+            .attr('data-src');
           const url = $(el).find('a').attr('href');
           const id = url ? url.split('/').filter(Boolean).pop() : '';
           anime.push({ id, title, thumbnail, url });
@@ -257,14 +273,14 @@ export const getFilter = async (
   status: string,
   type: string,
   order: string,
-  genre: string[],
+  genre: string[] = [],
 ) => {
   try {
     let currentPage = 1;
     let hasNextPage = true;
     let allAnime: any[] = [];
 
-    const limit = 600;
+    const limit = 50;
 
     let genreParams = '';
     genre.forEach((genre) => {
@@ -274,7 +290,7 @@ export const getFilter = async (
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://samehadaku.now/daftar-anime-2/page/${currentPage}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
+      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
       console.log('url: ', url);
       try {
         const { data } = await axios.get(url);
@@ -287,9 +303,12 @@ export const getFilter = async (
           url: string | undefined;
         }[] = [];
 
-        $('.animposx').each((i, el) => {
-          const title = $(el).find('.title h2').text().trim();
-          const thumbnail = $(el).find('img').attr('src');
+        $('.bsx').each((i, el) => {
+          const title = $(el).find('.tt h4').text().trim();
+          const thumbnail = $(el)
+            .find('.limit > img')
+            .not('div.play img')
+            .attr('data-src');
           const url = $(el).find('a').attr('href');
           const id = url ? url.split('/').filter(Boolean).pop() : '';
           anime.push({ id, title, thumbnail, url });
@@ -325,26 +344,24 @@ export const getFilter = async (
 
 export const getAnimeDetail = async (id: string) => {
   try {
-    const url = `https://samehadaku.now/anime/${id}`;
+    const url = `https://kuronime.vip/anime/${id}`;
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const rawTitle = $('h1.entry-title').text().trim();
-    const rtitle = rawTitle.replace('Nonton Anime ', '').trim();
-    const title = rtitle.replace('Sub Indo', '').trim();
-    const description = $('.entry-content p').text().trim();
-    const thumbnail = $('.thumb img').attr('src');
+    const title = $('.entry-title').text().trim();
+    const description = $('.const p').text().trim();
+    const thumbnail = $('.con .l img').attr('data-src');
+    console.log(thumbnail);
 
     const episode: any[] = [];
-    const episodeElements = $('.epsleft');
+    const episodeElements = $('.bixbox ul li');
     const totalEpisode = episodeElements.length;
 
     episodeElements.each((i, el) => {
       const title = $(el).find('.lchx').text().trim();
       const url = $(el).find('a').attr('href');
-      const release = $(el).find('.date').text().trim();
       const id = url?.split('/').filter(Boolean).pop();
-      episode.push({ id, title, release, url });
+      episode.push({ id, title, url });
     });
 
     return { id, title, description, thumbnail, totalEpisode, episode };
@@ -354,22 +371,163 @@ export const getAnimeDetail = async (id: string) => {
   }
 };
 
-const CryptoJSAesJsonFormatter = {
-  stringify: (cipherParams: any) => {
-    const jsonObj: { ct: string; iv?: string; s?: string } = {
-      ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64),
-    };
-    if (cipherParams.iv) jsonObj.iv = cipherParams.iv.toString();
-    if (cipherParams.salt) jsonObj.s = cipherParams.salt.toString();
-    return JSON.stringify(jsonObj);
-  },
-  parse: (jsonStr: string) => {
-    const parsed = JSON.parse(jsonStr);
-    const cipherParams = CryptoJS.lib.CipherParams.create({
-      ciphertext: CryptoJS.enc.Base64.parse(parsed.ct),
+export const getSearch = async (id: string) => {
+  try {
+    let currentPage = 1;
+    let hasNextPage = true;
+
+    const url = `https://kuronime.vip/?s=${id}`;
+    console.log('url: ', url);
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      url: string | undefined;
+    }[] = [];
+
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, url });
     });
-    if (parsed.iv) cipherParams.iv = CryptoJS.enc.Hex.parse(parsed.iv);
-    if (parsed.s) cipherParams.salt = CryptoJS.enc.Hex.parse(parsed.s);
-    return cipherParams;
-  },
+
+    return anime;
+  } catch (error: any) {
+    console.error('error in getFilter: ', error.message);
+    throw new Error('Server Error');
+  }
+};
+
+export const getEpisodeUrl = async (anime: string) => {
+  try {
+    const animeUrl = `https://kuronime.vip/${anime}`;
+
+    const response = await axios.get(animeUrl);
+
+    const re = / var _0xa100d42aa = "(.*)";/m;
+    const body = re.exec(response.data);
+    if (!body || !body[1]) throw new Error('ID extraction failed');
+    const id = body[1];
+
+    const hex2a = (hexx: any) => {
+      const hex = hexx.toString();
+      let str = '';
+      for (let i = 0; i < hex.length; i += 2) {
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+      }
+      return str;
+    };
+
+    const CryptoJSAesJson = {
+      stringify: (cipherParams: any) => {
+        const jsonObj: any = {
+          ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64),
+        };
+        if (cipherParams.iv) jsonObj.iv = cipherParams.iv.toString();
+        if (cipherParams.salt) jsonObj.s = cipherParams.salt.toString();
+        return JSON.stringify(jsonObj);
+      },
+      parse: (jsonStr: string) => {
+        const jsonObj = JSON.parse(jsonStr);
+        const cipherParams = CryptoJS.lib.CipherParams.create({
+          ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct),
+        });
+        if (jsonObj.iv) cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv);
+        if (jsonObj.s) cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s);
+        return cipherParams;
+      },
+    };
+
+    const postResponse = await axios({
+      url: 'https://animeku.org/api/v9/sources',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: { id: id },
+    });
+
+    const decrypted = CryptoJS.AES.decrypt(
+      atob(postResponse.data.mirror),
+      '3&!Z0M,VIZ;dZW==',
+      { format: CryptoJSAesJson },
+    );
+
+    const decryption = hex2a(decrypted.toString());
+    const decryptedData = JSON.parse(hex2a(decrypted.toString()));
+    console.log(decryptedData);
+
+    let krakenUrls: any[] = [];
+    let doodstreamUrls: any[] = [];
+    let mp4UploadUrls: any[] = [];
+    if (decryption.includes('krakenfiles.com')) {
+      const embedSection = decryptedData.embed;
+
+      for (const qualityKey of Object.keys(embedSection)) {
+        const quality = embedSection[qualityKey];
+        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+          krakenUrls.push({ quality: qualityKey, url: quality.krakenfiles });
+        }
+      }
+
+      const extractedUrl = krakenUrls.map(async (url) => {
+        const directUrl = await extractKrakenFiles(url.url);
+        return { quality: url.quality, url: directUrl };
+      });
+
+      krakenUrls = await Promise.all(extractedUrl);
+    }
+
+    if (decryption.includes('do7go.com')) {
+      const embedSection = decryptedData.embed;
+
+      for (const qualityKey of Object.keys(embedSection)) {
+        const quality = embedSection[qualityKey];
+        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+          doodstreamUrls.push({ quality: qualityKey, url: quality.doodstream });
+        }
+      }
+
+      const extractedUrl = doodstreamUrls.map(async (url) => {
+        const directUrl = await extractDoodStream(url.url);
+        console.log(directUrl);
+        return { quality: url.quality, url: directUrl };
+      });
+
+      doodstreamUrls = await Promise.all(extractedUrl);
+    }
+
+    if (decryption.includes('mp4upload.com')) {
+      const embedSection = decryptedData.embed;
+
+      for (const qualityKey of Object.keys(embedSection)) {
+        const quality = embedSection[qualityKey];
+        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+          mp4UploadUrls.push({ quality: qualityKey, url: quality.mp4upload });
+        }
+      }
+
+      const extractedUrl = mp4UploadUrls.map(async (url) => {
+        const directUrl = await extractMp4Upload(url.url);
+        console.log(directUrl);
+        return { quality: url.quality, url: directUrl };
+      });
+
+      mp4UploadUrls = await Promise.all(extractedUrl);
+    }
+
+    return {
+      krakenfiles: krakenUrls,
+      doodstream: doodstreamUrls,
+      mp4upload: mp4UploadUrls,
+    };
+  } catch (error) {
+    console.error('error in getEpisode: ', error);
+  }
 };
