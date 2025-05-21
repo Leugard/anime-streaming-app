@@ -5,11 +5,11 @@ import {
   getAnimeByType,
   getAnimeDetail,
   getAnimes,
+  getEpisodeUrl,
   getFilter,
   getSearch,
 } from '../controllers/animeController';
 import { Request, Response, NextFunction } from 'express';
-import { extractKrakenFiles } from '../utils/extractor';
 import axios from 'axios';
 import https from 'https';
 
@@ -120,19 +120,15 @@ router.get(
     }
   },
 );
-
 router.get(
   '/extract/:id',
   async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
     try {
-      const { id } = req.params;
-      const baseUrl = 'https://krakenfiles.com/embed-video/';
-      const url = `${baseUrl}${id}`;
-      const response = await extractKrakenFiles(url);
-
+      const response = await getEpisodeUrl(id);
       res.status(201).json({ success: true, data: response });
     } catch (error: any) {
-      console.error('Error in getDetail: ', error.message);
+      console.error('Error in getEpisodeUrl: ', error.message);
       res.status(501).json({ message: 'Internal server error' });
     }
   },
@@ -146,7 +142,6 @@ router.get('/stream', async (req: Request, res: Response) => {
   const videoUrl = req.query.url as string;
 
   try {
-    // Get headers to check video size and type
     const headResponse = await axios({
       method: 'HEAD',
       url: videoUrl,
@@ -157,7 +152,7 @@ router.get('/stream', async (req: Request, res: Response) => {
         'Accept-Language': 'en-US,en;q=0.9',
         Connection: 'keep-alive',
       },
-      httpsAgent: httpsAgent, // Skip SSL certificate validation
+      httpsAgent: httpsAgent,
     });
 
     const contentLength = headResponse.headers['content-length'];
@@ -220,7 +215,7 @@ router.get('/stream', async (req: Request, res: Response) => {
           'Accept-Language': 'en-US,en;q=0.9',
           Connection: 'keep-alive',
         },
-        httpsAgent: httpsAgent, // Skip SSL certificate validation
+        httpsAgent: httpsAgent,
       });
 
       videoResponse.data.pipe(res);

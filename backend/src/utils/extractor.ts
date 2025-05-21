@@ -17,12 +17,12 @@ export async function extractKrakenFiles(url: string) {
     const $ = cheerio.load(response.data);
 
     const videoUrl = $('source').attr('src');
+    console.log(videoUrl);
 
     return videoUrl;
-  } catch (error) {
-    throw new Error(
-      `Krakenfiles extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
+  } catch (error: any) {
+    console.error('error in kraken: ', error.message);
+    return null;
   }
 }
 
@@ -60,10 +60,9 @@ export async function extractMp4Upload(url: string) {
     }
 
     return directUrl;
-  } catch (error) {
-    throw new Error(
-      `mp4Upload extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
+  } catch (error: any) {
+    console.error('error in doodstream: ', error.message);
+    return null;
   }
 }
 
@@ -94,7 +93,8 @@ export async function extractDoodStream(url: string) {
 
     return trueUrl;
   } catch (error: any) {
-    console.error('error in extractDoodstream: ', error.message);
+    console.error('error in mp4upload: ', error.message);
+    return null;
   }
 }
 

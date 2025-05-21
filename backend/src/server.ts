@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
     <body>
       <h1>Video Player</h1>
       <video controls autoplay>
-        <source src="/api/v1/anime/stream?url=https://ydsr231kp.cloudatacdn.com/u5kj6b6tt7blsdgge4f4m3yvlysyp5jf2h2ytwu4faabnphad56epeoexjua/qn0m5ja9dh~4ZFm1GZSN2?token=3fb6qa9gyq9vw0ptse6f0com" type="video/mp4">
+        <source src="/api/v1/anime/stream?url=https://uploads5.krakenfiles.com/play/video/NzljYmY5ODk5OTdhYTdiNzOBmZenFvODVpJTuJhM1euIBzQE3PPbYLJ8luZrX0MrvXFnTNRP0-aJYJ6FC0juoBZYJgiraaG3GXaRDpWrevJ2NMWSshkGobRRr5YmOt0J" type="video/mp4">
         Your browser does not support the video tag.
       </video>
     </body>

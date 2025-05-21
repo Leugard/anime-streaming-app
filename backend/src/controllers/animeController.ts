@@ -466,6 +466,7 @@ export const getEpisodeUrl = async (anime: string) => {
     let krakenUrls: any[] = [];
     let doodstreamUrls: any[] = [];
     let mp4UploadUrls: any[] = [];
+
     if (decryption.includes('krakenfiles.com')) {
       const embedSection = decryptedData.embed;
 
@@ -489,7 +490,7 @@ export const getEpisodeUrl = async (anime: string) => {
 
       for (const qualityKey of Object.keys(embedSection)) {
         const quality = embedSection[qualityKey];
-        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+        if (quality.doodstream && typeof quality.doodstream === 'string') {
           doodstreamUrls.push({ quality: qualityKey, url: quality.doodstream });
         }
       }
@@ -508,7 +509,7 @@ export const getEpisodeUrl = async (anime: string) => {
 
       for (const qualityKey of Object.keys(embedSection)) {
         const quality = embedSection[qualityKey];
-        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+        if (quality.mp4upload && typeof quality.mp4upload === 'string') {
           mp4UploadUrls.push({ quality: qualityKey, url: quality.mp4upload });
         }
       }
