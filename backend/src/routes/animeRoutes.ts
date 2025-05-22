@@ -1,10 +1,10 @@
 import express from 'express';
 import {
   getAnimeByGenre,
+  getAnimeByOrder,
   getAnimeByStatus,
   getAnimeByType,
   getAnimeDetail,
-  getAnimes,
   getEpisodeUrl,
   getFilter,
   getSearch,
@@ -15,16 +15,14 @@ import https from 'https';
 
 const router = express.Router();
 
-router.get('/', getAnimes);
-
 router.get(
-  '/status/:id',
+  '/status/:page/:id',
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const { id, page } = req.params;
     try {
-      const response = await getAnimeByStatus(id);
+      const response = await getAnimeByStatus(id, page);
 
-      res.status(201).json({ success: true, data: response });
+      res.status(200).json({ success: true, data: response });
     } catch (error: any) {
       console.error('Error in getStatus: ', error.message);
       res.status(501).json({ message: 'Internal server error' });
@@ -33,11 +31,11 @@ router.get(
 );
 
 router.get(
-  '/type/:id',
+  '/type/:page/:id',
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const { id, page } = req.params;
     try {
-      const response = await getAnimeByType(id);
+      const response = await getAnimeByType(id, page);
 
       res.status(201).json({ success: true, data: response });
     } catch (error: any) {
@@ -48,15 +46,30 @@ router.get(
 );
 
 router.get(
-  '/genre/:id',
+  '/order/:page/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id, page } = req.params;
+    try {
+      const response = await getAnimeByOrder(id, page);
+
+      res.status(201).json({ success: true, data: response });
+    } catch (error: any) {
+      console.error('Error in getType: ', error.message);
+      res.status(501).json({ message: 'Internal server error' });
+    }
+  },
+);
+
+router.get(
+  '/genre/:page/:id',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
+      const { id, page } = req.params;
 
       const genres = id.includes(',') ? id.split(',') : [id];
       const trimmedGenres = genres.map((genre) => genre.trim());
 
-      const response = await getAnimeByGenre(trimmedGenres);
+      const response = await getAnimeByGenre(trimmedGenres, page);
 
       res.status(201).json({ success: true, data: response });
     } catch (error: any) {
@@ -67,19 +80,25 @@ router.get(
 );
 
 router.get(
-  '/filter/:status/:type/:order',
+  '/filter/:page/:status/:type/:order',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { status, type, order } = req.params;
+      const { status, type, order, page } = req.params;
       const genre = req.query.genre as string;
 
       if (genre) {
         const genres = genre.includes(',') ? genre.split(',') : [genre];
         const trimmedGenres = genres.map((genre) => genre.trim());
-        const response = await getFilter(status, type, order, trimmedGenres);
+        const response = await getFilter(
+          status,
+          type,
+          order,
+          page,
+          trimmedGenres,
+        );
       }
 
-      const response = await getFilter(status, type, order);
+      const response = await getFilter(status, type, order, page);
 
       res.status(201).json({ success: true, data: response });
     } catch (error: any) {
@@ -120,6 +139,7 @@ router.get(
     }
   },
 );
+
 router.get(
   '/extract/:id',
   async (req: Request, res: Response, next: NextFunction) => {
@@ -141,91 +161,32 @@ const httpsAgent = new https.Agent({
 router.get('/stream', async (req: Request, res: Response) => {
   const videoUrl = req.query.url as string;
 
+  if (!videoUrl) {
+    res
+      .status(400)
+      .json({ success: false, message: "Missing 'url' query parameter." });
+  }
+
   try {
-    const headResponse = await axios({
-      method: 'HEAD',
-      url: videoUrl,
+    const range = req.headers.range;
+
+    const response = await axios.get(videoUrl, {
+      responseType: 'stream',
       headers: {
-        'User-Agent': 'Mozilla/5.0',
-        Referer: 'https://mp4upload.com',
-        Accept: '*/*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        Connection: 'keep-alive',
+        Range: range || '',
+        Referer: videoUrl,
       },
       httpsAgent: httpsAgent,
     });
 
-    const contentLength = headResponse.headers['content-length'];
-    const contentType = headResponse.headers['content-type'];
-
-    // Get range from request
-    const range = req.headers.range;
-
-    if (range && contentLength) {
-      // Parse Range
-      // Example: "bytes=32324-"
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
-      const end = parts[1]
-        ? parseInt(parts[1], 10)
-        : parseInt(contentLength, 10) - 1;
-      const chunksize = end - start + 1;
-
-      // Stream the video chunk
-      const videoResponse = await axios({
-        method: 'GET',
-        url: videoUrl,
-        headers: {
-          Range: `bytes=${start}-${end}`,
-          'User-Agent': 'Mozilla/5.0',
-          Referer: 'https://mp4upload.com',
-          Accept: '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          Connection: 'keep-alive',
-        },
-        responseType: 'stream',
-        httpsAgent: httpsAgent, // Skip SSL certificate validation
-      });
-
-      // Set response headers
-      res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${contentLength}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': contentType || 'video/mp4',
-      });
-
-      // Pipe the video stream to response
-      videoResponse.data.pipe(res);
-    } else {
-      // If no range is provided, send the entire video (not recommended for large files)
-      res.writeHead(200, {
-        'Content-Length': contentLength,
-        'Content-Type': contentType || 'video/mp4',
-      });
-
-      const videoResponse = await axios({
-        method: 'GET',
-        url: videoUrl,
-        responseType: 'stream',
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          Referer: 'https://mp4upload.com',
-          Accept: '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          Connection: 'keep-alive',
-        },
-        httpsAgent: httpsAgent,
-      });
-
-      videoResponse.data.pipe(res);
-    }
+    const headers = Object.fromEntries(Object.entries(response.headers));
+    res.writeHead(response.status, headers);
+    response.data.pipe(res);
   } catch (error: any) {
-    console.error('Error streaming video:', error);
-    res.status(500).json({
-      message: 'Error streaming video',
-      error: error.message,
-    });
+    console.error('Stream proxy error:', error.message);
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to stream video.' });
   }
 });
 

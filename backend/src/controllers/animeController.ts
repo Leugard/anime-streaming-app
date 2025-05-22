@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Request, Response, NextFunction } from 'express';
 import * as cheerio from 'cheerio';
 import CryptoJS from 'crypto-js';
 import {
@@ -8,261 +7,139 @@ import {
   extractMp4Upload,
 } from '../utils/extractor';
 
-export const getAnimes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const getAnimeByStatus = async (id: string, page: string) => {
   try {
-    let currentPage = 1;
-    let hasNextPage = true;
-    let allAnime: any[] = [];
+    const url = `https://kuronime.vip/anime/page/${page}/?title&status=${id}&type&order=title`;
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
 
-    const limit = 50;
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      rating: string | undefined;
+      url: string | undefined;
+    }[] = [];
 
-    while (hasNextPage && allAnime.length <= limit) {
-      console.log('Fetching page', currentPage);
-
-      const url = `https://kuronime.vip/anime/page/${currentPage}`;
-      try {
-        const { data } = await axios.get(url);
-        const $ = cheerio.load(data);
-
-        const anime: {
-          id: string | undefined;
-          title: string;
-          thumbnail: string | undefined;
-          url: string | undefined;
-        }[] = [];
-
-        $('.bsx').each((i, el) => {
-          const title = $(el).find('.tt h4').text().trim();
-          const thumbnail = $(el)
-            .find('.limit > img')
-            .not('div.play img')
-            .attr('data-src');
-          const url = $(el).find('a').attr('href');
-          const id = url ? url.split('/').filter(Boolean).pop() : '';
-          console.log(thumbnail);
-          anime.push({ id, title, thumbnail, url });
-        });
-
-        allAnime.push(...anime);
-
-        const isLastPage =
-          anime.length === 0 || (anime.length === limit && currentPage > 1);
-
-        if (isLastPage) {
-          hasNextPage = false;
-          console.log('Reached last page at page', currentPage);
-        } else {
-          currentPage++;
-        }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          hasNextPage = false;
-          console.log('Reached end of pages at page', currentPage);
-        } else {
-          throw error;
-        }
-      }
-    }
-    res.status(201).json({
-      success: true,
-      data: allAnime,
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const rating = $(el).find('.rating i').text().trim();
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, rating, url });
     });
-  } catch (error) {
-    next(error);
-  }
-};
 
-export const getAnimeByStatus = async (id: String) => {
-  try {
-    let currentPage = 1;
-    let hasNextPage = true;
-    let allAnime: any[] = [];
-
-    const limit = 50;
-
-    while (hasNextPage && allAnime.length <= limit) {
-      console.log('Fetching page', currentPage);
-
-      const url = `https://kuronime.vip/anime/page/${currentPage}/?title&status=${id}&type&order=title`;
-      try {
-        const { data } = await axios.get(url);
-        const $ = cheerio.load(data);
-
-        const anime: {
-          id: string | undefined;
-          title: string;
-          thumbnail: string | undefined;
-          url: string | undefined;
-        }[] = [];
-
-        $('.bsx').each((i, el) => {
-          const title = $(el).find('.tt h4').text().trim();
-          const thumbnail = $(el)
-            .find('.limit > img')
-            .not('div.play img')
-            .attr('data-src');
-          const url = $(el).find('a').attr('href');
-          const id = url ? url.split('/').filter(Boolean).pop() : '';
-          anime.push({ id, title, thumbnail, url });
-        });
-
-        allAnime.push(...anime);
-
-        const isLastPage =
-          anime.length === 0 || (anime.length === limit && currentPage > 1);
-
-        if (isLastPage) {
-          hasNextPage = false;
-          console.log('Reached last page at page', currentPage);
-        } else {
-          currentPage++;
-        }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          hasNextPage = false;
-          console.log('Reached end of pages at page', currentPage);
-        } else {
-          throw error;
-        }
-      }
-    }
-
-    return allAnime;
+    return anime;
   } catch (error: any) {
     console.error('error in getAnimeByStatus: ', error.message);
     throw new Error('Server Error');
   }
 };
 
-export const getAnimeByType = async (id: String) => {
+export const getAnimeByType = async (id: String, page: string) => {
   try {
-    let currentPage = 1;
-    let hasNextPage = true;
-    let allAnime: any[] = [];
+    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=${id}&order=title`;
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
 
-    const limit = 50;
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      rating: string | undefined;
+      url: string | undefined;
+    }[] = [];
 
-    while (hasNextPage && allAnime.length <= limit) {
-      console.log('Fetching page', currentPage);
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const rating = $(el).find('.rating i').text().trim();
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, rating, url });
+    });
 
-      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=&type=${id}&order=title`;
-      try {
-        const { data } = await axios.get(url);
-        const $ = cheerio.load(data);
-
-        const anime: {
-          id: string | undefined;
-          title: string;
-          thumbnail: string | undefined;
-          url: string | undefined;
-        }[] = [];
-
-        $('.bsx').each((i, el) => {
-          const title = $(el).find('.tt h4').text().trim();
-          const thumbnail = $(el)
-            .find('.limit > img')
-            .not('div.play img')
-            .attr('data-src');
-          const url = $(el).find('a').attr('href');
-          const id = url ? url.split('/').filter(Boolean).pop() : '';
-          anime.push({ id, title, thumbnail, url });
-        });
-
-        allAnime.push(...anime);
-
-        const isLastPage =
-          anime.length === 0 || (anime.length === limit && currentPage > 1);
-
-        if (isLastPage) {
-          hasNextPage = false;
-          console.log('Reached last page at page', currentPage);
-        } else {
-          currentPage++;
-        }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          hasNextPage = false;
-          console.log('Reached end of pages at page', currentPage);
-        } else {
-          throw error;
-        }
-      }
-    }
-
-    return allAnime;
+    return anime;
   } catch (error: any) {
     console.error('error in getAnimeByType: ', error.message);
     throw new Error('Server Error');
   }
 };
 
-export const getAnimeByGenre = async (id: string[]) => {
+export const getAnimeByOrder = async (id: any, page: any) => {
   try {
-    let currentPage = 1;
-    let hasNextPage = true;
-    let allAnime: any[] = [];
+    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=&order=${id}`;
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
 
-    const limit = 600;
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      rating: string | undefined;
+      url: string | undefined;
+    }[] = [];
 
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const rating = $(el).find('.rating i').text().trim();
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, rating, url });
+    });
+
+    return anime;
+  } catch (error: any) {
+    console.error('error in getAnimeByType: ', error.message);
+    throw new Error('Server Error');
+  }
+};
+
+export const getAnimeByGenre = async (id: string[], page: string) => {
+  try {
     let genreParams = '';
     id.forEach((genre) => {
       genreParams += `&genre%5B%5D=${encodeURIComponent(genre)}`;
     });
 
-    while (hasNextPage && allAnime.length <= limit) {
-      console.log('Fetching page', currentPage);
+    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=&order=title&${genreParams}`;
 
-      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=&type=&order=title&${genreParams}`;
+    console.log('url: ', url);
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
 
-      console.log('url: ', url);
-      try {
-        const { data } = await axios.get(url);
-        const $ = cheerio.load(data);
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      rating: string | undefined;
+      url: string | undefined;
+    }[] = [];
 
-        const anime: {
-          id: string | undefined;
-          title: string;
-          thumbnail: string | undefined;
-          url: string | undefined;
-        }[] = [];
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const rating = $(el).find('.rating i').text().trim();
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, rating, url });
+    });
 
-        $('.bsx').each((i, el) => {
-          const title = $(el).find('.tt h4').text().trim();
-          const thumbnail = $(el)
-            .find('.limit > img')
-            .not('div.play img')
-            .attr('data-src');
-          const url = $(el).find('a').attr('href');
-          const id = url ? url.split('/').filter(Boolean).pop() : '';
-          anime.push({ id, title, thumbnail, url });
-        });
-
-        allAnime.push(...anime);
-
-        const isLastPage =
-          anime.length === 0 || (anime.length === limit && currentPage > 1);
-
-        if (isLastPage) {
-          hasNextPage = false;
-          console.log('Reached last page at page', currentPage);
-        } else {
-          currentPage++;
-        }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          hasNextPage = false;
-          console.log('Reached end of pages at page', currentPage);
-        } else {
-          throw error;
-        }
-      }
-    }
-
-    return allAnime;
+    return anime;
   } catch (error: any) {
     console.error('error in getAnimeByGenre: ', error.message);
     throw new Error('Server Error');
@@ -273,7 +150,50 @@ export const getFilter = async (
   status: string,
   type: string,
   order: string,
+  page: string,
   genre: string[] = [],
+) => {
+  try {
+    let genreParams = '';
+    genre.forEach((genre) => {
+      genreParams += `&genre%5B%5D=${encodeURIComponent(genre)}`;
+    });
+
+    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+
+    const anime: {
+      id: string | undefined;
+      title: string;
+      thumbnail: string | undefined;
+      url: string | undefined;
+    }[] = [];
+
+    $('.bsx').each((i, el) => {
+      const title = $(el).find('.tt h4').text().trim();
+      const thumbnail = $(el)
+        .find('.limit > img')
+        .not('div.play img')
+        .attr('data-src');
+      const url = $(el).find('a').attr('href');
+      const id = url ? url.split('/').filter(Boolean).pop() : '';
+      anime.push({ id, title, thumbnail, url });
+    });
+
+    return anime;
+  } catch (error: any) {
+    console.error('error in getFilter: ', error.message);
+    throw new Error('Server Error');
+  }
+};
+
+const test = async (
+  status: string,
+  type: string,
+  order: string,
+  genre: string[] = [],
+  page: string,
 ) => {
   try {
     let currentPage = 1;
@@ -290,7 +210,7 @@ export const getFilter = async (
     while (hasNextPage && allAnime.length <= limit) {
       console.log('Fetching page', currentPage);
 
-      const url = `https://kuronime.vip/anime/page/${currentPage}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
+      const url = `https://kuronime.vip/anime/page/${page}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
       console.log('url: ', url);
       try {
         const { data } = await axios.get(url);
