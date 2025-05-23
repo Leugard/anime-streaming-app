@@ -147,10 +147,10 @@ export const getAnimeByGenre = async (id: string[], page: string) => {
 };
 
 export const getFilter = async (
-  status: string,
-  type: string,
-  order: string,
+  type: string = '',
+  order: string = '',
   page: string,
+  status: string = '',
   genre: string[] = [],
 ) => {
   try {
@@ -160,6 +160,7 @@ export const getFilter = async (
     });
 
     const url = `https://kuronime.vip/anime/page/${page}/?title=&status=${status}&type=${type}&order=${order}${genreParams}`;
+    console.log('url: ', url);
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 

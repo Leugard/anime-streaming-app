@@ -80,27 +80,32 @@ router.get(
 );
 
 router.get(
-  '/filter/:page/:status/:type/:order',
+  '/filter/:page',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { status, type, order, page } = req.params;
+      const { page } = req.params;
+      const status = req.query.status as string;
+      const type = req.query.type as string;
+      const order = req.query.order as string;
       const genre = req.query.genre as string;
 
       if (genre) {
         const genres = genre.includes(',') ? genre.split(',') : [genre];
         const trimmedGenres = genres.map((genre) => genre.trim());
         const response = await getFilter(
-          status,
           type,
           order,
           page,
+          status,
           trimmedGenres,
         );
+
+        res.status(201).json({ success: true, data: response });
+      } else {
+        const response = await getFilter(type, order, page, status);
+
+        res.status(201).json({ success: true, data: response });
       }
-
-      const response = await getFilter(status, type, order, page);
-
-      res.status(201).json({ success: true, data: response });
     } catch (error: any) {
       console.error('Error in getType: ', error.message);
       res.status(501).json({ message: 'Internal server error' });

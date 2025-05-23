@@ -10,16 +10,27 @@ type Anime = {
   //   rating: string;
 };
 
+type FilterParams = {
+  page: number;
+  type: string;
+  order: string;
+  status: string;
+  genre: string[];
+};
+
 type CachedData<T> = {
   data: T;
-  timestamp: number; // in ms
+  timestamp: number;
+  params?: FilterParams;
 };
 
 type AnimeStore = {
   popularAnime: CachedData<Anime[]> | null;
   newAnime: CachedData<Anime[]> | null;
+  filter: CachedData<Anime[]> | null;
   setPopularAnime: (data: Anime[]) => void;
   setNewAnime: (data: Anime[]) => void;
+  setFilter: (data: CachedData<Anime[]>) => void;
   clearAnime: () => void;
 };
 
@@ -28,11 +39,14 @@ export const useAnimeStore = create<AnimeStore>()(
     (set) => ({
       popularAnime: null,
       newAnime: null,
+      filter: null,
 
       setPopularAnime: (data) =>
         set({ popularAnime: { data, timestamp: Date.now() } }),
       setNewAnime: (data) => set({ newAnime: { data, timestamp: Date.now() } }),
-      clearAnime: () => set({ popularAnime: null, newAnime: null }),
+      setFilter: (data: CachedData<Anime[]>) => set({ filter: data }),
+      clearAnime: () =>
+        set({ popularAnime: null, newAnime: null, filter: null }),
     }),
     {
       name: "anime-storage",

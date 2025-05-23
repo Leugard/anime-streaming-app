@@ -66,7 +66,12 @@ const CarouselItem = ({ item }: carouselProps) => {
         </View>
         <View className="pt-5 flex-row gap-3">
           <Button title="Watch" color="#00E676" />
-          <Button color="#252525" icon={require("../assets/icons/heart.png")} />
+          <Button
+            color="#252525"
+            icon={require("../assets/icons/heart.png")}
+            width={50}
+            height={50}
+          />
         </View>
       </View>
     </View>

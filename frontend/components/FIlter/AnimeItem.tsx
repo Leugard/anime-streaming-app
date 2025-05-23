@@ -3,7 +3,7 @@ import { Text, TouchableOpacity } from "react-native";
 
 const AnimeItem = ({ item }: any) => {
   return (
-    <TouchableOpacity className="items-center">
+    <TouchableOpacity className="items-center pl-5 pb-2 pt-5">
       <Image
         source={{ uri: item.thumbnail }}
         style={{
@@ -15,7 +15,7 @@ const AnimeItem = ({ item }: any) => {
         }}
       />
       <Text
-        className="text-white/80 text-[12px] font-medium"
+        className="text-white/80 text-[12px] font-medium text-center"
         numberOfLines={1}
         ellipsizeMode="tail"
         style={{ width: 90 }}

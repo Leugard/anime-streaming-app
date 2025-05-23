@@ -29,7 +29,7 @@ export default function TabLayout() {
                       ? require("../../assets/icons/home-focused.png")
                       : require("../../assets/icons/home.png")
                   }
-                  style={{ width: 30, height: 30, tintColor: color }}
+                  style={{ width: 28, height: 28, tintColor: color, top: 1 }}
                 />
               );
             },
@@ -46,7 +46,7 @@ export default function TabLayout() {
                       ? require("../../assets/icons/search-focused.png")
                       : require("../../assets/icons/search.png")
                   }
-                  style={{ width: 30, height: 30, tintColor: color }}
+                  style={{ width: 28, height: 28, tintColor: color, top: 1 }}
                 />
               );
             },
@@ -63,7 +63,7 @@ export default function TabLayout() {
                       ? require("../../assets/icons/explore-focused.png")
                       : require("../../assets/icons/explore.png")
                   }
-                  style={{ width: 30, height: 30, tintColor: color }}
+                  style={{ width: 28, height: 28, tintColor: color, top: 1 }}
                 />
               );
             },
@@ -80,7 +80,7 @@ export default function TabLayout() {
                       ? require("../../assets/icons/library-focused.png")
                       : require("../../assets/icons/library.png")
                   }
-                  style={{ width: 30, height: 30, tintColor: color }}
+                  style={{ width: 28, height: 28, tintColor: color, top: 1 }}
                 />
               );
             },
@@ -97,7 +97,7 @@ export default function TabLayout() {
                       ? require("../../assets/icons/settings-focused.png")
                       : require("../../assets/icons/settings.png")
                   }
-                  style={{ width: 30, height: 30, tintColor: color }}
+                  style={{ width: 28, height: 28, tintColor: color, top: 1 }}
                 />
               );
             },

@@ -6,9 +6,11 @@ interface ButtonProps {
   color: string;
   title?: string;
   icon?: any;
+  width?: any;
+  height?: any;
 }
 
-const Button = ({ color, title, icon }: ButtonProps) => {
+const Button = ({ color, title, icon, width, height }: ButtonProps) => {
   return (
     <View>
       {title && (
@@ -21,8 +23,8 @@ const Button = ({ color, title, icon }: ButtonProps) => {
       )}
       {icon && (
         <TouchableOpacity
-          className={`w-12 h-12 items-center justify-center rounded-md`}
-          style={{ backgroundColor: color }}
+          className={`items-center justify-center rounded-md`}
+          style={{ backgroundColor: color, width: width, height: height }}
         >
           <Image
             source={icon}

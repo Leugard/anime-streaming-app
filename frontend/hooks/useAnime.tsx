@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnimeStore } from "@/stores/useAnimeStore";
 import axios from "axios";
 
@@ -44,6 +44,7 @@ export const useNewAnime = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(newAnime?.data || []);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const shouldFetch = !newAnime || isExpired(newAnime.timestamp, 12);
@@ -55,7 +56,7 @@ export const useNewAnime = () => {
     const fetchAnime = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5001/api/v1/anime/order/1/latest"
+          `http://localhost:5001/api/v1/anime/order/${page}/latest`
         );
         if (response.data.success) {
           setNewAnime(response.data.data);
@@ -70,9 +71,102 @@ export const useNewAnime = () => {
     };
 
     fetchAnime();
-  }, [newAnime, setNewAnime]);
+  }, [newAnime, setNewAnime, page]);
 
-  return { loading, data, error };
+  return { loading, data, error, page: setPage };
+};
+
+export const useFilter = () => {
+  const { filter, setFilter } = useAnimeStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState(
+    () =>
+      filter?.params || {
+        type: "",
+        order: "title",
+        status: "",
+        page: 1,
+        genre: [] as string[],
+      }
+  );
+
+  const isFetching = useRef(false);
+
+  const fetchData = useCallback(
+    async (params: typeof filters) => {
+      if (isFetching.current) return;
+
+      isFetching.current = true;
+      setLoading(true);
+      setError(null);
+
+      try {
+        const { data } = await axios.get(
+          `http://localhost:5001/api/v1/anime/filter/${params.page}`,
+          {
+            params: {
+              type: params.type,
+              order: params.order,
+              status: params.status,
+              genre: params.genre.join(","),
+            },
+          }
+        );
+
+        if (data.success) {
+          setFilter({
+            data: data.data,
+            timestamp: Date.now(),
+            params: { ...params },
+          });
+        }
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+        isFetching.current = false;
+      }
+    },
+    [setFilter]
+  );
+
+  useEffect(() => {
+    const paramsMatch =
+      filter?.params &&
+      JSON.stringify(filter.params) === JSON.stringify(filters);
+    const isFresh = filter?.timestamp && !isExpired(filter.timestamp, 0.5);
+
+    if (paramsMatch && isFresh) {
+      setLoading(false);
+      return;
+    }
+
+    fetchData(filters);
+  }, [filters, fetchData]);
+
+  const updateFilter = useCallback((key: keyof typeof filters, value: any) => {
+    setFilters((prev) => {
+      if (JSON.stringify(prev[key]) === JSON.stringify(value)) return prev;
+
+      return {
+        ...prev,
+        [key]: value,
+        ...(key !== "page" && { page: 1 }),
+        ...(key !== "order" && { order: "title" }),
+      };
+    });
+  }, []);
+
+  return {
+    loading,
+    data: filter?.data,
+    error,
+    filters,
+    updateFilter,
+    currentPage: filters.page,
+    setPage: (page: number) => updateFilter("page", page),
+  };
 };
 
 const isExpired = (timestamp: number, maxAgeHours: number) => {
