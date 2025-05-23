@@ -1,0 +1,13 @@
+{
+  "name": "anime-streaming-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "backend": "npm run dev --prefix backend",
+    "frontend": "npm start --prefix frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

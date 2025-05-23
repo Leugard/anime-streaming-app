@@ -1,32 +1,10 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 import AnimeItem from "./AnimeItem";
+import { useNewAnime } from "@/hooks/useAnime";
 
 const AnimeCard = () => {
-  const [anime, setAnime] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchAnime = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5001/api/v1/anime/order/1/latest"
-        );
-        if (res.data.success) {
-          setAnime(res.data.data);
-        }
-        setLoading(false);
-      } catch (error: any) {
-        console.log("error in animeCard: ", error.message);
-        setLoading(false);
-        setError(error);
-      }
-    };
-
-    fetchAnime();
-  }, [anime]);
+  const { loading, data, error } = useNewAnime();
 
   return (
     <View className="pt-3">
@@ -36,14 +14,12 @@ const AnimeCard = () => {
         </View>
       ) : error ? (
         <>
-          <Text className="text-red-600 text-2xl">
-            There is an error in backend
-          </Text>
+          <Text className="text-red-600 text-2xl">{error}</Text>
         </>
       ) : (
         <>
           <FlatList
-            data={anime}
+            data={data}
             keyExtractor={(item: any) => item.id}
             numColumns={3}
             renderItem={({ item }) => {

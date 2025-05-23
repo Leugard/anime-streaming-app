@@ -3,7 +3,7 @@ import React from "react";
 import CarouselCard from "@/components/CarouselCard";
 import AnimeCard from "@/components/AnimeCard";
 
-const home = () => {
+const Home = () => {
   return (
     <ScrollView className="flex-1 bg-[#171717]">
       <CarouselCard />
@@ -15,4 +15,4 @@ const home = () => {
   );
 };
 
-export default home;
+export default Home;

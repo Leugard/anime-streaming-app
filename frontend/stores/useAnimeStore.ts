@@ -10,9 +10,16 @@ type Anime = {
   //   rating: string;
 };
 
+type CachedData<T> = {
+  data: T;
+  timestamp: number; // in ms
+};
+
 type AnimeStore = {
-  popularAnime: Anime[] | null;
+  popularAnime: CachedData<Anime[]> | null;
+  newAnime: CachedData<Anime[]> | null;
   setPopularAnime: (data: Anime[]) => void;
+  setNewAnime: (data: Anime[]) => void;
   clearAnime: () => void;
 };
 
@@ -20,14 +27,18 @@ export const useAnimeStore = create<AnimeStore>()(
   persist(
     (set) => ({
       popularAnime: null,
-      setPopularAnime: (data) => set({ popularAnime: data }),
-      clearAnime: () => set({ popularAnime: null }),
+      newAnime: null,
+
+      setPopularAnime: (data) =>
+        set({ popularAnime: { data, timestamp: Date.now() } }),
+      setNewAnime: (data) => set({ newAnime: { data, timestamp: Date.now() } }),
+      clearAnime: () => set({ popularAnime: null, newAnime: null }),
     }),
     {
       name: "anime-storage",
       storage: {
         getItem: async (name) => {
-          const value = await AsyncStorage.getItem(name);
+          const value: any = await AsyncStorage.getItem(name);
           return value ? JSON.parse(value) : null;
         },
         setItem: async (name, value) => {

@@ -1,17 +1,16 @@
-import { ActivityIndicator, View } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { ActivityIndicator, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
 import CarouselItem from "./CarouselItem";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
 import Pagination from "./Pagination";
-import usePopularAnime from "@/hooks/usePopularAnime";
+import { usePopularAnime } from "@/hooks/useAnime";
 
 const CarouselCard = () => {
   const scrollX = useSharedValue(0);
-  const { loading, data } = usePopularAnime();
+  const { loading, data, error } = usePopularAnime();
   const [paginationIndex, setPaginationIndex] = useState(0);
 
   const onScrollHandler = useAnimatedScrollHandler({
@@ -42,6 +41,12 @@ const CarouselCard = () => {
       {loading ? (
         <>
           <ActivityIndicator size={"large"} />
+        </>
+      ) : error ? (
+        <>
+          <>
+            <Text className="text-red-600 text-2xl">{error}</Text>
+          </>
         </>
       ) : (
         <>
