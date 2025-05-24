@@ -6,17 +6,26 @@ interface ButtonProps {
   color: string;
   title?: string;
   icon?: any;
-  width?: any;
-  height?: any;
+  width?: number;
+  height?: number;
+  onPress: () => void;
 }
 
-const Button = ({ color, title, icon, width, height }: ButtonProps) => {
+const Button = ({
+  color,
+  title,
+  icon,
+  width,
+  height,
+  onPress,
+}: ButtonProps) => {
   return (
     <View>
       {title && (
         <TouchableOpacity
           className={`w-40 h-12 items-center justify-center rounded-md`}
           style={{ backgroundColor: color }}
+          onPress={onPress}
         >
           <Text className="text-white font-bold text-[20px]">{title}</Text>
         </TouchableOpacity>
@@ -25,6 +34,7 @@ const Button = ({ color, title, icon, width, height }: ButtonProps) => {
         <TouchableOpacity
           className={`items-center justify-center rounded-md`}
           style={{ backgroundColor: color, width: width, height: height }}
+          onPress={onPress}
         >
           <Image
             source={icon}

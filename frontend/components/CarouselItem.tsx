@@ -69,8 +69,8 @@ const CarouselItem = ({ item }: carouselProps) => {
           <Button
             color="#252525"
             icon={require("../assets/icons/heart.png")}
-            width={50}
-            height={50}
+            width={43}
+            height={43}
           />
         </View>
       </View>

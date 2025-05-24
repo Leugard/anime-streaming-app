@@ -1,9 +1,13 @@
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { Text, TouchableOpacity } from "react-native";
 
 const AnimeItem = ({ item }: any) => {
   return (
-    <TouchableOpacity className="items-center">
+    <TouchableOpacity
+      className="items-center"
+      onPress={() => router.push(`/animeDetail/${item.id}`)}
+    >
       <Image
         source={{ uri: item.thumbnail }}
         style={{

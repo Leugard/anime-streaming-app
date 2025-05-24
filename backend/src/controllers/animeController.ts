@@ -271,12 +271,21 @@ export const getAnimeDetail = async (id: string) => {
 
     const title = $('.entry-title').text().trim();
     const description = $('.const p').text().trim();
+    const rawRating = $('.rating strong').text().trim();
+    const rating = rawRating.replace('Rating ', '').trim();
     const thumbnail = $('.con .l img').attr('data-src');
-    console.log(thumbnail);
 
+    const genres: string[] = [];
     const episode: any[] = [];
     const episodeElements = $('.bixbox ul li');
     const totalEpisode = episodeElements.length;
+
+    $('.infodetail')
+      .find('a[href*="/genres/"]')
+      .each((i, el) => {
+        const genre = $(el).text().trim();
+        if (genre) genres.push(genre);
+      });
 
     episodeElements.each((i, el) => {
       const title = $(el).find('.lchx').text().trim();
@@ -285,7 +294,16 @@ export const getAnimeDetail = async (id: string) => {
       episode.push({ id, title, url });
     });
 
-    return { id, title, description, thumbnail, totalEpisode, episode };
+    return {
+      id,
+      title,
+      rating,
+      genres,
+      description,
+      thumbnail,
+      totalEpisode,
+      episode,
+    };
   } catch (error: any) {
     console.error('Error in getAnimeDetail: ', error.message);
     throw new Error('Server error');

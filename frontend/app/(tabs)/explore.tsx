@@ -1,14 +1,20 @@
 import Button from "@/components/Button";
 import AnimeCard from "@/components/FIlter/AnimeCard";
+import FilterModal from "@/components/FIlter/FilterModal";
 import { useFilter } from "@/hooks/useAnime";
-import { useState } from "react";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { useRef, useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 
 const Explore = () => {
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  console.log(bottomSheetRef);
+
   const {
     data,
     loading: animeLoading,
     error,
+    filters,
     updateFilter,
     setPage,
   } = useFilter();
@@ -36,6 +42,14 @@ const Explore = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenFilter = () => {
+    bottomSheetRef.current?.expand();
+  };
+
+  const handleCloseFilter = () => {
+    bottomSheetRef.current?.close();
   };
 
   const isLoading = loading || animeLoading;
@@ -80,8 +94,15 @@ const Explore = () => {
           width={50}
           height={50}
           color={"#00E676"}
+          onPress={handleOpenFilter}
         />
       </View>
+      <FilterModal
+        ref={bottomSheetRef}
+        filters={filters}
+        updateFilter={updateFilter}
+        onClose={handleCloseFilter}
+      />
     </View>
   );
 };
