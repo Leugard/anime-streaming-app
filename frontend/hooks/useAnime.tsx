@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAnimeStore } from "@/stores/useAnimeStore";
+import { Detail, useAnimeStore } from "@/stores/useAnimeStore";
 import axios from "axios";
 
 export const usePopularAnime = () => {
@@ -166,6 +166,52 @@ export const useFilter = () => {
     updateFilter,
     currentPage: filters.page,
     setPage: (page: number) => updateFilter("page", page),
+  };
+};
+
+export const useDetail = (id: any) => {
+  const { detail, setDetail } = useAnimeStore();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Detail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAnimeDetail = useCallback(async () => {
+    try {
+      const cachedData = detail[id];
+      if (cachedData && !isExpired(cachedData.timestamp, 0.5)) {
+        setData(cachedData.data);
+        return;
+      }
+      const response = await axios.get(
+        `http://localhost:5001/api/v1/anime/detail/${id}`
+      );
+      if (response.data.success) {
+        const detailData = response.data.data;
+        setData(detailData);
+        setDetail(id, {
+          ...detailData,
+          totalEpisode: detailData.totalEpisode || 0,
+          episode: detailData.episode || [],
+        });
+      }
+    } catch (error: any) {
+      console.error("error in carousel: ", error.message);
+      setLoading(false);
+      setError(error.message || "Failed to fetch anime details");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, detail, setDetail]);
+
+  useEffect(() => {
+    fetchAnimeDetail();
+  }, [id, fetchAnimeDetail]);
+
+  return {
+    loading,
+    data,
+    error,
+    refresh: fetchAnimeDetail,
   };
 };
 

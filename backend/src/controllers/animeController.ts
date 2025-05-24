@@ -266,6 +266,7 @@ const test = async (
 export const getAnimeDetail = async (id: string) => {
   try {
     const url = `https://kuronime.vip/anime/${id}`;
+    console.log(url);
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
