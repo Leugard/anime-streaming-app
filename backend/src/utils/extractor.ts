@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import crypto from 'crypto';
 
 export async function extractKrakenFiles(url: string) {
   try {
@@ -93,7 +92,7 @@ export async function extractDoodStream(url: string) {
 
     return trueUrl;
   } catch (error: any) {
-    console.error('error in mp4upload: ', error.message);
+    console.error('error in doodstream: ', error.message);
     return null;
   }
 }

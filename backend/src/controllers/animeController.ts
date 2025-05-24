@@ -407,42 +407,42 @@ export const getEpisodeUrl = async (anime: string) => {
     let doodstreamUrls: any[] = [];
     let mp4UploadUrls: any[] = [];
 
-    if (decryption.includes('krakenfiles.com')) {
-      const embedSection = decryptedData.embed;
+    // if (decryption.includes('krakenfiles.com')) {
+    //   const embedSection = decryptedData.embed;
 
-      for (const qualityKey of Object.keys(embedSection)) {
-        const quality = embedSection[qualityKey];
-        if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
-          krakenUrls.push({ quality: qualityKey, url: quality.krakenfiles });
-        }
-      }
+    //   for (const qualityKey of Object.keys(embedSection)) {
+    //     const quality = embedSection[qualityKey];
+    //     if (quality.krakenfiles && typeof quality.krakenfiles === 'string') {
+    //       krakenUrls.push({ quality: qualityKey, url: quality.krakenfiles });
+    //     }
+    //   }
 
-      const extractedUrl = krakenUrls.map(async (url) => {
-        const directUrl = await extractKrakenFiles(url.url);
-        return { quality: url.quality, url: directUrl };
-      });
+    //   const extractedUrl = krakenUrls.map(async (url) => {
+    //     const directUrl = await extractKrakenFiles(url.url);
+    //     return { quality: url.quality, url: directUrl };
+    //   });
 
-      krakenUrls = await Promise.all(extractedUrl);
-    }
+    //   krakenUrls = await Promise.all(extractedUrl);
+    // }
 
-    if (decryption.includes('do7go.com')) {
-      const embedSection = decryptedData.embed;
+    // if (decryption.includes('do7go.com')) {
+    //   const embedSection = decryptedData.embed;
 
-      for (const qualityKey of Object.keys(embedSection)) {
-        const quality = embedSection[qualityKey];
-        if (quality.doodstream && typeof quality.doodstream === 'string') {
-          doodstreamUrls.push({ quality: qualityKey, url: quality.doodstream });
-        }
-      }
+    //   for (const qualityKey of Object.keys(embedSection)) {
+    //     const quality = embedSection[qualityKey];
+    //     if (quality.doodstream && typeof quality.doodstream === 'string') {
+    //       doodstreamUrls.push({ quality: qualityKey, url: quality.doodstream });
+    //     }
+    //   }
 
-      const extractedUrl = doodstreamUrls.map(async (url) => {
-        const directUrl = await extractDoodStream(url.url);
-        console.log(directUrl);
-        return { quality: url.quality, url: directUrl };
-      });
+    //   const extractedUrl = doodstreamUrls.map(async (url) => {
+    //     const directUrl = await extractDoodStream(url.url);
+    //     console.log(directUrl);
+    //     return { quality: url.quality, url: directUrl };
+    //   });
 
-      doodstreamUrls = await Promise.all(extractedUrl);
-    }
+    //   doodstreamUrls = await Promise.all(extractedUrl);
+    // }
 
     if (decryption.includes('mp4upload.com')) {
       const embedSection = decryptedData.embed;
@@ -464,8 +464,8 @@ export const getEpisodeUrl = async (anime: string) => {
     }
 
     return {
-      krakenfiles: krakenUrls,
-      doodstream: doodstreamUrls,
+      // krakenfiles: krakenUrls,
+      // doodstream: doodstreamUrls,
       mp4upload: mp4UploadUrls,
     };
   } catch (error) {

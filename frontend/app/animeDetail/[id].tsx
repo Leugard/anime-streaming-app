@@ -5,9 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
-import axios from "axios";
+import React from "react";
+import { router, useLocalSearchParams, Link } from "expo-router";
 import { Image } from "expo-image";
 import Button from "@/components/Button";
 import { ScrollView } from "react-native-gesture-handler";
