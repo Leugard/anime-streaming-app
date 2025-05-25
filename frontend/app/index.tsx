@@ -1,13 +1,9 @@
 import { View, ActivityIndicator } from "react-native";
 import React, { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 
-const index = () => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const router = useRouter();
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+const StartPage = () => {
   useEffect(() => {
     setTimeout(() => {
       router.push("/(tabs)/home");
@@ -22,4 +18,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default StartPage;

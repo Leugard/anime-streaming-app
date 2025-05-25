@@ -277,7 +277,7 @@ export const getAnimeDetail = async (id: string) => {
     const thumbnail = $('.con .l img').attr('data-src');
 
     const genres: string[] = [];
-    const episode: any[] = [];
+    let episode: any[] = [];
     const episodeElements = $('.bixbox ul li');
     const totalEpisode = episodeElements.length;
 
@@ -294,6 +294,8 @@ export const getAnimeDetail = async (id: string) => {
       const id = url?.split('/').filter(Boolean).pop();
       episode.push({ id, title, url });
     });
+
+    episode = episode.reverse();
 
     return {
       id,

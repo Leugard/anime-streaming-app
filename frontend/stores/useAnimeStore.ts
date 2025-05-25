@@ -10,6 +10,12 @@ type Anime = {
   //   rating: string;
 };
 
+type EpisodeProgress = {
+  position: number;
+  duration: number;
+  completed: boolean;
+};
+
 export type Detail = {
   id: string;
   title: string;
@@ -40,10 +46,13 @@ type AnimeStore = {
   newAnime: CachedData<Anime[]> | null;
   filter: CachedData<Anime[]> | null;
   detail: Record<string, CachedData<Detail>>;
+  progress: Record<string, EpisodeProgress>;
   setPopularAnime: (data: Anime[]) => void;
   setNewAnime: (data: Anime[]) => void;
   setFilter: (data: CachedData<Anime[]>) => void;
   setDetail: (id: string, data: Detail) => void;
+  setProgress: (episodeId: string, progress: EpisodeProgress) => void;
+  markCompleted: (episodeId: string) => void;
   clearAnime: () => void;
 };
 
@@ -54,6 +63,7 @@ export const useAnimeStore = create<AnimeStore>()(
       newAnime: null,
       filter: null,
       detail: {},
+      progress: {},
 
       setPopularAnime: (data) =>
         set({ popularAnime: { data, timestamp: Date.now() } }),
@@ -64,6 +74,24 @@ export const useAnimeStore = create<AnimeStore>()(
           detail: {
             ...state.detail,
             [id]: { data, timestamp: Date.now() },
+          },
+        })),
+      setProgress: (episodeId, progress) =>
+        set((state) => ({
+          progress: {
+            ...state.progress,
+            [episodeId]: progress,
+          },
+        })),
+      markCompleted: (episodeId) =>
+        set((state) => ({
+          progress: {
+            ...state.progress,
+            [episodeId]: {
+              ...state.progress[episodeId],
+              completed: true,
+              position: 0,
+            },
           },
         })),
       clearAnime: () =>

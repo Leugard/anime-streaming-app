@@ -6,39 +6,138 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React from "react";
-import { router, useLocalSearchParams, Link } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Button from "@/components/Button";
 import { ScrollView } from "react-native-gesture-handler";
 import Rating from "@/components/Rating";
 import { useDetail } from "@/hooks/useAnime";
+import { useAnimeStore } from "@/stores/useAnimeStore";
 
 const Detail = () => {
   const { id } = useLocalSearchParams();
-
   const { loading, data, error, refresh } = useDetail(id);
+  const { progress } = useAnimeStore();
+
+  const getNextEpisodeToWatch = () => {
+    if (!data?.episode) return null;
+
+    let lastWatched = null;
+    let firstIncomplete = null;
+
+    for (const episode of data?.episode ?? []) {
+      const episodeProgress = progress[episode.id];
+
+      if (episodeProgress) {
+        if (!episodeProgress.completed && episodeProgress.position > 0) {
+          lastWatched = episode;
+        }
+      } else if (!firstIncomplete) {
+        firstIncomplete = episode;
+      }
+    }
+
+    return lastWatched || firstIncomplete || data?.episode[0];
+  };
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const getProgressPercentage = (episodeId: string) => {
+    const episodeProgress = progress[episodeId];
+    if (!episodeProgress || episodeProgress.duration === 0) return 0;
+    return (episodeProgress.position / episodeProgress.duration) * 100;
+  };
+
+  const handleWatchPress = () => {
+    const nextEpisode = getNextEpisodeToWatch();
+    if (nextEpisode) {
+      router.push(`../extract/${nextEpisode.id}`);
+    }
+  };
+
+  const handleEpisodePress = (episode: any) => {
+    router.push(`../extract/${episode.id}`);
+  };
 
   const renderItem = ({ item }: any) => {
+    const episodeProgress = progress[item.id];
+    const progressPercentage = getProgressPercentage(item.id);
+    const isCompleted = episodeProgress?.completed || false;
+    const hasProgress = episodeProgress && episodeProgress.position > 0;
+
     return (
       <View className="px-3 pb-5">
         <TouchableOpacity
           className="h-12 bg-[#252525] rounded-md justify-center"
-          onPress={() => router.push(`../extract/${item.id}`)}
+          onPress={() => handleEpisodePress(item)}
         >
-          <Text className="text-white font-medium text-lg px-3">
-            {item.title}
-          </Text>
+          {hasProgress && (
+            <View className="h-1 bg-[#333]">
+              <View
+                className={`h-full ${
+                  isCompleted ? "bg-green-500" : "bg-blue-500"
+                }`}
+                style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+              />
+            </View>
+          )}
+
+          <View className="h-12 justify-center px-3">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-white font-medium text-lg flex-1">
+                {item.title}
+              </Text>
+
+              <View className="flex-row items-center ml-2">
+                {isCompleted ? (
+                  <View className="flex-row items-center">
+                    <Text className="text-green-500 text-xs mr-1">✓</Text>
+                    <Text className="text-green-500 text-xs">Completed</Text>
+                  </View>
+                ) : hasProgress ? (
+                  <View className="flex-row items-center">
+                    <Text className="text-blue-500 text-xs mr-1">⏸</Text>
+                    <Text className="text-blue-500 text-xs">
+                      {formatTime(episodeProgress.position)}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-gray-500 text-xs">Not started</Text>
+                )}
+              </View>
+            </View>
+          </View>
         </TouchableOpacity>
       </View>
     );
   };
 
+  const getWatchButtonText = () => {
+    const nextEpisode = getNextEpisodeToWatch();
+    if (!nextEpisode) return "Watch";
+
+    const episodeProgress = progress[nextEpisode.id];
+    if (
+      episodeProgress &&
+      episodeProgress.position > 0 &&
+      !episodeProgress.completed
+    ) {
+      return "Continue";
+    }
+
+    return "Watch";
+  };
+
   return (
     <ScrollView className="flex-1 bg-[#171717]">
       {loading ? (
-        <>
+        <View className="items-center justify-center">
           <ActivityIndicator size={"large"} />
-        </>
+        </View>
       ) : (
         <View>
           <View>
@@ -72,7 +171,11 @@ const Detail = () => {
                 </Text>
                 <Rating rating={data?.rating?.toString() ?? ""} />
                 <View className="pt-1 flex-row gap-5">
-                  <Button title="Watch" color="#00C853" onPress={() => {}} />
+                  <Button
+                    title={getWatchButtonText()}
+                    color="#00C853"
+                    onPress={handleWatchPress}
+                  />
                   <Button
                     icon={require("../../assets/icons/heart.png")}
                     color="#252525"
