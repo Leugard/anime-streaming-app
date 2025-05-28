@@ -19,7 +19,7 @@ export const usePopularAnime = () => {
     const fetchAnime = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/v1/anime/filter/1?order=popular`
+          `http://15.235.185.136/api/v1/anime/filter/1?order=popular`
         );
         if (response.data.success) {
           setPopularAnime(response.data.data.slice(0, 5));
@@ -54,7 +54,7 @@ export const useNewAnime = () => {
         else setLoadingMore(true);
 
         const response = await axios.get(
-          `http://localhost:5001/api/v1/anime/filter/${page}?order=latest`
+          `http://15.235.185.136/api/v1/anime/filter/${page}?order=latest`
         );
         if (response.data.success) {
           setNewAnime(page, response.data.data);
@@ -110,7 +110,7 @@ export const useFilter = () => {
 
       try {
         const { data } = await axios.get(
-          `http://localhost:5001/api/v1/anime/filter/${params.page}`,
+          `http://15.235.185.136/api/v1/anime/filter/${params.page}`,
           {
             params: {
               type: params.type,
@@ -190,7 +190,7 @@ export const useDetail = (id: any) => {
         return;
       }
       const response = await axios.get(
-        `http://localhost:5001/api/v1/anime/detail/${id}`
+        `http://15.235.185.136/api/v1/anime/detail/${id}`
       );
       if (response.data.success) {
         const detailData = response.data.data;
@@ -237,7 +237,7 @@ export const useSearch = () => {
     const fetchSearch = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5001/api/v1/anime/search/${search}`
+          `http://http://15.235.185.136/api/v1/anime/search/${search}`
         );
         if (res.data.success) {
           setAnime(res.data.data);
