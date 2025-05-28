@@ -1,9 +1,5 @@
 import express from 'express';
 import {
-  getAnimeByGenre,
-  getAnimeByOrder,
-  getAnimeByStatus,
-  getAnimeByType,
   getAnimeDetail,
   getEpisodeUrl,
   getFilter,
@@ -14,70 +10,6 @@ import axios from 'axios';
 import https from 'https';
 
 const router = express.Router();
-
-router.get(
-  '/status/:page/:id',
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id, page } = req.params;
-    try {
-      const response = await getAnimeByStatus(id, page);
-
-      res.status(200).json({ success: true, data: response });
-    } catch (error: any) {
-      console.error('Error in getStatus: ', error.message);
-      res.status(501).json({ message: 'Internal server error' });
-    }
-  },
-);
-
-router.get(
-  '/type/:page/:id',
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id, page } = req.params;
-    try {
-      const response = await getAnimeByType(id, page);
-
-      res.status(201).json({ success: true, data: response });
-    } catch (error: any) {
-      console.error('Error in getType: ', error.message);
-      res.status(501).json({ message: 'Internal server error' });
-    }
-  },
-);
-
-router.get(
-  '/order/:page/:id',
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id, page } = req.params;
-    try {
-      const response = await getAnimeByOrder(id, page);
-
-      res.status(201).json({ success: true, data: response });
-    } catch (error: any) {
-      console.error('Error in getType: ', error.message);
-      res.status(501).json({ message: 'Internal server error' });
-    }
-  },
-);
-
-router.get(
-  '/genre/:page/:id',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id, page } = req.params;
-
-      const genres = id.includes(',') ? id.split(',') : [id];
-      const trimmedGenres = genres.map((genre) => genre.trim());
-
-      const response = await getAnimeByGenre(trimmedGenres, page);
-
-      res.status(201).json({ success: true, data: response });
-    } catch (error: any) {
-      console.error('Error in getType: ', error.message);
-      res.status(501).json({ message: 'Internal server error' });
-    }
-  },
-);
 
 router.get(
   '/filter/:page',
@@ -93,16 +25,16 @@ router.get(
         const genres = genre.includes(',') ? genre.split(',') : [genre];
         const trimmedGenres = genres.map((genre) => genre.trim());
         const response = await getFilter(
+          page,
           type,
           order,
-          page,
           status,
           trimmedGenres,
         );
 
         res.status(201).json({ success: true, data: response });
       } else {
-        const response = await getFilter(type, order, page, status);
+        const response = await getFilter(page, type, order, status);
 
         res.status(201).json({ success: true, data: response });
       }

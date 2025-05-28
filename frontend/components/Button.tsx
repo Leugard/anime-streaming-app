@@ -23,8 +23,8 @@ const Button = ({
     <View>
       {title && (
         <TouchableOpacity
-          className={`w-40 h-12 items-center justify-center rounded-md`}
-          style={{ backgroundColor: color }}
+          className={`items-center justify-center rounded-md`}
+          style={{ backgroundColor: color, width: width, height: height }}
           onPress={onPress}
         >
           <Text className="text-white font-bold text-[20px]">{title}</Text>

@@ -75,9 +75,9 @@ const Explore = () => {
       </View>
       <View className="">
         {isLoading ? (
-          <>
+          <View className="">
             <ActivityIndicator size={"large"} />
-          </>
+          </View>
         ) : error ? (
           <Text className="text-red-500 text-center mt-4">{error}</Text>
         ) : data && data.length > 0 ? (

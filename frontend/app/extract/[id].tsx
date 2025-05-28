@@ -12,12 +12,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { StatusBar } from "expo-status-bar";
-import { AVPlaybackStatus, ResizeMode, Video } from "expo-av";
+import Video from "react-native-video";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useAnimeStore } from "@/stores/useAnimeStore";
+import ImmersiveMode from "react-native-immersive-mode";
 
 const { height } = Dimensions.get("window");
 
@@ -40,13 +41,16 @@ const VideoPlayer = () => {
   const [selectedQuality, setSelectedQuality] = useState<string>("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
+  const [position, setPosition] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [showControls, setShowControls] = useState(true);
   const [showSourceSelector, setShowSourceSelector] = useState(false);
   const [hasStartedFromSaved, setHasStartedFromSaved] = useState(false);
   const [nextEpisodeData, setNextEpisodeData] = useState<any>(null);
 
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const controlsTimer = useRef<NodeJS.Timeout | number | null>(null);
   const progressSaveTimer = useRef<NodeJS.Timeout | number | null>(null);
@@ -93,11 +97,9 @@ const VideoPlayer = () => {
       !currentProgress.completed
     ) {
       if (currentProgress.position > 30) {
-        setTimeout(async () => {
+        setTimeout(() => {
           if (videoRef.current) {
-            await videoRef.current.setPositionAsync(
-              currentProgress.position * 1000
-            );
+            videoRef.current.seek(currentProgress.position);
             setHasStartedFromSaved(true);
           }
         }, 1000);
@@ -108,15 +110,16 @@ const VideoPlayer = () => {
   }, [selectedUrl, currentProgress, hasStartedFromSaved]);
 
   useEffect(() => {
-    const setOrientation = async () => {
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT
-      );
-    };
+    ImmersiveMode.fullLayout(true);
+    ImmersiveMode.setBarMode("FullSticky");
 
-    setOrientation();
+    // Lock landscape orientation
+    ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT
+    );
 
     return () => {
+      ImmersiveMode.setBarMode("Normal");
       ScreenOrientation.unlockAsync();
     };
   }, [selectedUrl]);
@@ -137,16 +140,16 @@ const VideoPlayer = () => {
   }, [showControls, selectedUrl]);
 
   useEffect(() => {
-    if (status?.isLoaded && status.positionMillis && status.durationMillis) {
-      const positionSeconds = Math.floor(status.positionMillis / 1000);
-      const durationSeconds = Math.floor(status.durationMillis / 1000);
+    if (isLoaded && duration > 0) {
+      const positionSeconds = Math.floor(position);
+      const durationSeconds = Math.floor(duration);
 
       if (progressSaveTimer.current) {
         clearTimeout(progressSaveTimer.current);
       }
 
       progressSaveTimer.current = setTimeout(() => {
-        const progressPercentage = positionSeconds / durationSeconds / 100;
+        const progressPercentage = (positionSeconds / durationSeconds) * 100;
 
         if (progressPercentage >= 90) {
           markCompleted(episodeId);
@@ -166,7 +169,7 @@ const VideoPlayer = () => {
         clearTimeout(progressSaveTimer.current);
       }
     };
-  }, [status, episodeId, setProgress, markCompleted]);
+  }, [position, duration, episodeId, setProgress, markCompleted]);
 
   const showNextEpisodePrompt = () => {
     Alert.alert(
@@ -202,8 +205,8 @@ const VideoPlayer = () => {
     provider: string
   ) => {
     let currentPos = 0;
-    if (status?.isLoaded && status.positionMillis) {
-      currentPos = status.positionMillis;
+    if (isLoaded) {
+      currentPos = position;
     }
     const proxied = `http://localhost:5001/api/v1/anime/stream?url=${encodeURIComponent(
       realUrl
@@ -214,18 +217,18 @@ const VideoPlayer = () => {
     setShowSourceSelector(false);
 
     if (currentPos > 0) {
-      setTimeout(async () => {
+      setTimeout(() => {
         if (videoRef.current) {
-          await videoRef.current.setPositionAsync(currentPos);
+          videoRef.current.seek(currentPos);
         }
       }, 1000);
     }
   };
 
   const handleBackPress = async () => {
-    if (status?.isLoaded && status.positionMillis && status.durationMillis) {
-      const positionSeconds = Math.floor(status.positionMillis / 1000);
-      const durationSeconds = Math.floor(status.durationMillis / 1000);
+    if (isLoaded) {
+      const positionSeconds = Math.floor(position);
+      const durationSeconds = Math.floor(duration);
 
       if (positionSeconds > 30) {
         const progressPercentage = (positionSeconds / durationSeconds) * 100;
@@ -246,42 +249,32 @@ const VideoPlayer = () => {
     router.back();
   };
 
-  const togglePlay = async () => {
-    if (videoRef.current) {
-      if (status?.isLoaded && status.isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
+  const togglePlay = () => {
+    if (isLoaded) {
+      setIsPlaying((prev) => !prev);
     }
   };
 
-  const seekBackward = async () => {
-    if (videoRef.current && status?.isLoaded && status.positionMillis) {
-      const newPosition = Math.max(0, status.positionMillis - 10000);
-      await videoRef.current.setPositionAsync(newPosition);
+  const seekBackward = () => {
+    if (videoRef.current && isLoaded) {
+      const newPosition = Math.max(0, position - 10);
+      videoRef.current.seek(newPosition);
+      setPosition(newPosition);
     }
   };
 
-  const seekForward = async () => {
-    if (
-      videoRef.current &&
-      status?.isLoaded &&
-      status.positionMillis &&
-      status.durationMillis
-    ) {
-      const newPosition = Math.min(
-        status.durationMillis,
-        status.positionMillis + 10000
-      );
-      await videoRef.current.setPositionAsync(newPosition);
+  const seekForward = () => {
+    if (videoRef.current && isLoaded) {
+      const newPosition = Math.min(duration, position + 10);
+      videoRef.current.seek(newPosition);
+      setPosition(newPosition);
     }
   };
 
-  const formatTime = (millis: number | undefined) => {
-    if (!millis) return "0:00";
-    const minutes = Math.floor(millis / 60000);
-    const seconds = Math.floor((millis % 60000) / 1000);
+  const formatTime = (secs: number | undefined) => {
+    if (secs == null) return "0:00";
+    const minutes = Math.floor(secs / 60);
+    const seconds = Math.floor(secs % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
@@ -340,14 +333,16 @@ const VideoPlayer = () => {
       >
         <Video
           ref={videoRef}
-          style={{ flex: 1 }}
+          style={{ width: "100%", height: "100%" }}
           source={{ uri: selectedUrl }}
-          useNativeControls={false}
-          resizeMode={ResizeMode.CONTAIN}
-          isLooping={false}
-          onPlaybackStatusUpdate={setStatus}
-          shouldPlay={true}
-          progressUpdateIntervalMillis={1000}
+          resizeMode="contain"
+          repeat={false}
+          paused={!isPlaying}
+          onProgress={({ currentTime }) => setPosition(currentTime)}
+          onLoad={({ duration: loadedDuration }) => {
+            setDuration(loadedDuration);
+            setIsLoaded(true);
+          }}
         />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
@@ -415,7 +410,7 @@ const VideoPlayer = () => {
                 onPress={togglePlay}
               >
                 <Ionicons
-                  name={status?.isLoaded && status.isPlaying ? "pause" : "play"}
+                  name={isPlaying ? "pause" : "play"}
                   size={50}
                   color={"white"}
                 />
@@ -439,28 +434,23 @@ const VideoPlayer = () => {
               <View>
                 <Slider
                   style={{ width: "100%", height: 40, marginBottom: 8 }}
-                  value={status && status.isLoaded ? status.positionMillis : 0}
+                  value={position}
                   minimumValue={0}
-                  maximumValue={
-                    status && status.isLoaded ? status.durationMillis : 0
-                  }
+                  maximumValue={duration}
                   thumbTintColor="#fff"
                   minimumTrackTintColor="#fff"
                   maximumTrackTintColor="rgba(255,255,255,0.5)"
-                  onSlidingComplete={async (value) => {
-                    await videoRef.current?.setPositionAsync(value);
+                  onSlidingComplete={(value) => {
+                    videoRef.current?.seek(value);
+                    setPosition(value);
                   }}
                 />
                 <View className="flex-row justify-between">
                   <Text className="text-[rgba(255,255,255,0.8)] text-sm font-medium">
-                    {formatTime(
-                      status?.isLoaded ? status.positionMillis : undefined
-                    )}
+                    {formatTime(position)}
                   </Text>
                   <Text className="text-[rgba(255,255,255,0.8)] text-sm font-medium">
-                    {formatTime(
-                      status?.isLoaded ? status.durationMillis : undefined
-                    )}
+                    {formatTime(duration)}
                   </Text>
                 </View>
               </View>

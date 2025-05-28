@@ -1,7 +1,7 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
-import React from "react";
+import { View, Text, ActivityIndicator } from "react-native";
 import AnimeItem from "./AnimeItem";
 import { useNewAnime } from "@/hooks/useAnime";
+import { FlatList } from "react-native-gesture-handler";
 
 const AnimeCard = () => {
   const { loading, data, error } = useNewAnime();
@@ -9,15 +9,15 @@ const AnimeCard = () => {
   return (
     <View className="pt-3">
       {loading ? (
-        <View className="justify-center items-center">
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size={"large"} />
         </View>
       ) : error ? (
-        <>
+        <View className="flex-1 items-center justify-center">
           <Text className="text-red-600 text-2xl">{error}</Text>
-        </>
+        </View>
       ) : (
-        <>
+        <View className="items-center">
           <FlatList
             data={data}
             keyExtractor={(item: any) => item.id}
@@ -29,9 +29,10 @@ const AnimeCard = () => {
                 </View>
               );
             }}
+            scrollEnabled={false}
             showsVerticalScrollIndicator={false}
           />
-        </>
+        </View>
       )}
     </View>
   );

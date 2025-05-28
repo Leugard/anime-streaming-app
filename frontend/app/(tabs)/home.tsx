@@ -1,7 +1,6 @@
 import { ScrollView, Text, View } from "react-native";
-import React from "react";
-import CarouselCard from "@/components/CarouselCard";
 import AnimeCard from "@/components/AnimeCard";
+import CarouselCard from "@/components/Carousel/CarouselCard";
 
 const Home = () => {
   return (

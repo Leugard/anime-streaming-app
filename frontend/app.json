@@ -9,7 +9,8 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.luna.aniflix"
     },
     "android": {
       "navigationBarBackgroundColor": "#000000",
@@ -20,7 +21,11 @@
         "backgroundColor": "#171717"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.luna.aniflix"
+      "package": "com.luna.aniflix",
+      "permissions": [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "plugins": [
       "expo-router",

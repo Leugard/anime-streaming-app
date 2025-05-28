@@ -135,7 +135,7 @@ const Detail = () => {
   return (
     <ScrollView className="flex-1 bg-[#171717]">
       {loading ? (
-        <View className="items-center justify-center">
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size={"large"} />
         </View>
       ) : (
@@ -156,25 +156,29 @@ const Detail = () => {
                   borderColor: "#252525",
                 }}
               />
-              <View className="pl-5">
-                <Text
-                  className="text-xl font-bold text-white"
-                  style={{ width: 230 }}
-                >
-                  {data?.title}
-                </Text>
-                <Text
-                  className="text-md font-medium text-white/70 pt-1 pb-1"
-                  style={{ width: 230 }}
-                >
-                  {data?.genres?.join(" • ")}
-                </Text>
-                <Rating rating={data?.rating?.toString() ?? ""} />
+              <View className="pl-5 justify-between">
+                <View>
+                  <Text
+                    className="text-xl font-bold text-white"
+                    style={{ width: 230 }}
+                  >
+                    {data?.title}
+                  </Text>
+                  <Text
+                    className="text-md font-medium text-white/70 pt-1 pb-1"
+                    style={{ width: 230 }}
+                  >
+                    {data?.genres?.join(" • ")}
+                  </Text>
+                  <Rating rating={data?.rating?.toString() ?? ""} />
+                </View>
                 <View className="pt-1 flex-row gap-5">
                   <Button
                     title={getWatchButtonText()}
                     color="#00C853"
                     onPress={handleWatchPress}
+                    width={150}
+                    height={42}
                   />
                   <Button
                     icon={require("../../assets/icons/heart.png")}
@@ -200,7 +204,11 @@ const Detail = () => {
           <View className="pt-10 gap-3">
             <Text className="text-3xl font-bold text-white px-3">Episodes</Text>
             <View className="w-full h-0.5 bg-[#252525]" />
-            <FlatList data={data?.episode} renderItem={renderItem} />
+            <FlatList
+              data={data?.episode}
+              renderItem={renderItem}
+              scrollEnabled={false}
+            />
           </View>
         </View>
       )}

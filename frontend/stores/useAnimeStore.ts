@@ -6,8 +6,8 @@ type Anime = {
   id: string;
   title: string;
   thumbnail: string;
-  //   genre: string;
-  //   rating: string;
+  genre: string[];
+  rating: string;
 };
 
 type EpisodeProgress = {
@@ -43,12 +43,12 @@ type CachedData<T> = {
 
 type AnimeStore = {
   popularAnime: CachedData<Anime[]> | null;
-  newAnime: CachedData<Anime[]> | null;
+  newAnime: Record<number, CachedData<Anime[]>>;
   filter: CachedData<Anime[]> | null;
   detail: Record<string, CachedData<Detail>>;
   progress: Record<string, EpisodeProgress>;
   setPopularAnime: (data: Anime[]) => void;
-  setNewAnime: (data: Anime[]) => void;
+  setNewAnime: (page: number, data: Anime[]) => void;
   setFilter: (data: CachedData<Anime[]>) => void;
   setDetail: (id: string, data: Detail) => void;
   setProgress: (episodeId: string, progress: EpisodeProgress) => void;
@@ -60,14 +60,20 @@ export const useAnimeStore = create<AnimeStore>()(
   persist(
     (set) => ({
       popularAnime: null,
-      newAnime: null,
+      newAnime: {},
       filter: null,
       detail: {},
       progress: {},
 
       setPopularAnime: (data) =>
         set({ popularAnime: { data, timestamp: Date.now() } }),
-      setNewAnime: (data) => set({ newAnime: { data, timestamp: Date.now() } }),
+      setNewAnime: (page, data) =>
+        set((state) => ({
+          newAnime: {
+            ...state.newAnime,
+            [page]: { data, timestamp: Date.now() },
+          },
+        })),
       setFilter: (data: CachedData<Anime[]>) => set({ filter: data }),
       setDetail: (id, data) =>
         set((state) => ({
@@ -95,7 +101,7 @@ export const useAnimeStore = create<AnimeStore>()(
           },
         })),
       clearAnime: () =>
-        set({ popularAnime: null, newAnime: null, filter: null, detail: {} }),
+        set({ popularAnime: null, newAnime: {}, filter: null, detail: {} }),
     }),
     {
       name: "anime-storage",

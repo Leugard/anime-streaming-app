@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Detail, useAnimeStore } from "@/stores/useAnimeStore";
 import axios from "axios";
+import { Detail, useAnimeStore } from "@/stores/useAnimeStore";
 
 export const usePopularAnime = () => {
   const { popularAnime, setPopularAnime } = useAnimeStore();
@@ -19,7 +19,7 @@ export const usePopularAnime = () => {
     const fetchAnime = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5001/api/v1/anime/order/1/popular"
+          `http://localhost:5001/api/v1/anime/filter/1?order=popular`
         );
         if (response.data.success) {
           setPopularAnime(response.data.data.slice(0, 5));
@@ -42,38 +42,45 @@ export const usePopularAnime = () => {
 export const useNewAnime = () => {
   const { newAnime, setNewAnime } = useAnimeStore();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(newAnime?.data || []);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    const shouldFetch = !newAnime || isExpired(newAnime.timestamp, 12);
-    if (!shouldFetch) {
-      setLoading(false);
-      return;
-    }
-
     const fetchAnime = async () => {
       try {
+        const isInitialLoad = page === 1;
+        if (isInitialLoad) setLoading(true);
+        else setLoadingMore(true);
+
         const response = await axios.get(
-          `http://localhost:5001/api/v1/anime/order/${page}/latest`
+          `http://localhost:5001/api/v1/anime/filter/${page}?order=latest`
         );
         if (response.data.success) {
-          setNewAnime(response.data.data);
-          setData(response.data.data);
+          setNewAnime(page, response.data.data);
         }
-        setLoading(false);
       } catch (error: any) {
-        console.error("error in carousel: ", error.message);
-        setLoading(false);
         setError(error.message);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
     };
 
-    fetchAnime();
-  }, [newAnime, setNewAnime, page]);
+    const cachedData = newAnime[page];
+    const shouldFetch = !cachedData || isExpired(cachedData.timestamp, 6);
 
-  return { loading, data, error, page: setPage };
+    if (shouldFetch) {
+      fetchAnime();
+    } else {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [page, setNewAnime, newAnime]);
+
+  const data = Object.values(newAnime).flatMap((pageData) => pageData.data);
+
+  return { loading, data, error, page: setPage, loadingMore };
 };
 
 export const useFilter = () => {
@@ -143,7 +150,7 @@ export const useFilter = () => {
     }
 
     fetchData(filters);
-  }, [filters, fetchData]);
+  }, [filters, fetchData, filter?.params, filter?.timestamp]);
 
   const updateFilter = useCallback((key: keyof typeof filters, value: any) => {
     setFilters((prev) => {
@@ -213,6 +220,39 @@ export const useDetail = (id: any) => {
     error,
     refresh: fetchAnimeDetail,
   };
+};
+
+export const useSearch = () => {
+  const [search, setSearch] = useState("");
+  const [anime, setAnime] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!search) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchSearch = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5001/api/v1/anime/search/${search}`
+        );
+        if (res.data.success) {
+          setAnime(res.data.data);
+        }
+
+        setLoading(false);
+      } catch (error: any) {
+        setError(error.message);
+      }
+    };
+
+    fetchSearch();
+  }, [search]);
+
+  return { data: anime, setSearch, search, loading, error };
 };
 
 const isExpired = (timestamp: number, maxAgeHours: number) => {

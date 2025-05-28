@@ -7,149 +7,10 @@ import {
   extractMp4Upload,
 } from '../utils/extractor';
 
-export const getAnimeByStatus = async (id: string, page: string) => {
-  try {
-    const url = `https://kuronime.vip/anime/page/${page}/?title&status=${id}&type&order=title`;
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    const anime: {
-      id: string | undefined;
-      title: string;
-      thumbnail: string | undefined;
-      rating: string | undefined;
-      url: string | undefined;
-    }[] = [];
-
-    $('.bsx').each((i, el) => {
-      const title = $(el).find('.tt h4').text().trim();
-      const thumbnail = $(el)
-        .find('.limit > img')
-        .not('div.play img')
-        .attr('data-src');
-      const rating = $(el).find('.rating i').text().trim();
-      const url = $(el).find('a').attr('href');
-      const id = url ? url.split('/').filter(Boolean).pop() : '';
-      anime.push({ id, title, thumbnail, rating, url });
-    });
-
-    return anime;
-  } catch (error: any) {
-    console.error('error in getAnimeByStatus: ', error.message);
-    throw new Error('Server Error');
-  }
-};
-
-export const getAnimeByType = async (id: String, page: string) => {
-  try {
-    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=${id}&order=title`;
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    const anime: {
-      id: string | undefined;
-      title: string;
-      thumbnail: string | undefined;
-      rating: string | undefined;
-      url: string | undefined;
-    }[] = [];
-
-    $('.bsx').each((i, el) => {
-      const title = $(el).find('.tt h4').text().trim();
-      const thumbnail = $(el)
-        .find('.limit > img')
-        .not('div.play img')
-        .attr('data-src');
-      const rating = $(el).find('.rating i').text().trim();
-      const url = $(el).find('a').attr('href');
-      const id = url ? url.split('/').filter(Boolean).pop() : '';
-      anime.push({ id, title, thumbnail, rating, url });
-    });
-
-    return anime;
-  } catch (error: any) {
-    console.error('error in getAnimeByType: ', error.message);
-    throw new Error('Server Error');
-  }
-};
-
-export const getAnimeByOrder = async (id: any, page: any) => {
-  try {
-    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=&order=${id}`;
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    const anime: {
-      id: string | undefined;
-      title: string;
-      thumbnail: string | undefined;
-      rating: string | undefined;
-      url: string | undefined;
-    }[] = [];
-
-    $('.bsx').each((i, el) => {
-      const title = $(el).find('.tt h4').text().trim();
-      const thumbnail = $(el)
-        .find('.limit > img')
-        .not('div.play img')
-        .attr('data-src');
-      const rating = $(el).find('.rating i').text().trim();
-      const url = $(el).find('a').attr('href');
-      const id = url ? url.split('/').filter(Boolean).pop() : '';
-      anime.push({ id, title, thumbnail, rating, url });
-    });
-
-    return anime;
-  } catch (error: any) {
-    console.error('error in getAnimeByType: ', error.message);
-    throw new Error('Server Error');
-  }
-};
-
-export const getAnimeByGenre = async (id: string[], page: string) => {
-  try {
-    let genreParams = '';
-    id.forEach((genre) => {
-      genreParams += `&genre%5B%5D=${encodeURIComponent(genre)}`;
-    });
-
-    const url = `https://kuronime.vip/anime/page/${page}/?title=&status=&type=&order=title&${genreParams}`;
-
-    console.log('url: ', url);
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    const anime: {
-      id: string | undefined;
-      title: string;
-      thumbnail: string | undefined;
-      rating: string | undefined;
-      url: string | undefined;
-    }[] = [];
-
-    $('.bsx').each((i, el) => {
-      const title = $(el).find('.tt h4').text().trim();
-      const thumbnail = $(el)
-        .find('.limit > img')
-        .not('div.play img')
-        .attr('data-src');
-      const rating = $(el).find('.rating i').text().trim();
-      const url = $(el).find('a').attr('href');
-      const id = url ? url.split('/').filter(Boolean).pop() : '';
-      anime.push({ id, title, thumbnail, rating, url });
-    });
-
-    return anime;
-  } catch (error: any) {
-    console.error('error in getAnimeByGenre: ', error.message);
-    throw new Error('Server Error');
-  }
-};
-
 export const getFilter = async (
+  page: string,
   type: string = '',
   order: string = '',
-  page: string,
   status: string = '',
   genre: string[] = [],
 ) => {
@@ -170,8 +31,7 @@ export const getFilter = async (
       thumbnail: string | undefined;
       url: string | undefined;
     }[] = [];
-
-    $('.bsx').each((i, el) => {
+    const animePromises = $('.bsx').map(async (i, el) => {
       const title = $(el).find('.tt h4').text().trim();
       const thumbnail = $(el)
         .find('.limit > img')
@@ -179,8 +39,32 @@ export const getFilter = async (
         .attr('data-src');
       const url = $(el).find('a').attr('href');
       const id = url ? url.split('/').filter(Boolean).pop() : '';
-      anime.push({ id, title, thumbnail, url });
+
+      const genres: string[] = [];
+      let rating: string = '';
+      if (url) {
+        try {
+          const { data } = await axios.get(url);
+          const $ = cheerio.load(data);
+          $('.infodetail')
+            .find('a[href*="/genres/"]')
+            .each((i, el) => {
+              const genre = $(el).text().trim();
+              if (genre) genres.push(genre);
+            });
+
+          const rawRating = $('.rating strong').text().trim();
+          rating = rawRating.replace('Rating ', '').trim();
+        } catch (error) {
+          console.error(`Failed to fetch genre for ${title}:`, error);
+        }
+      }
+
+      return { id, title, thumbnail, genres, rating, url };
     });
+
+    const animeResults = await Promise.all(animePromises);
+    anime.push(...animeResults);
 
     return anime;
   } catch (error: any) {
